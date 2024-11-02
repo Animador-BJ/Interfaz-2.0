@@ -1,128 +1,211 @@
 # form_maestro_design.py
 
-import tkinter as tk
-from tkinter import font
+import customtkinter as ctk
 from PIL import Image, ImageTk, ImageDraw
-from PIL import Image as PilImage  
-from formularios.config import COLOR_BARRA_SUPERIOR, COLOR_MENU_LATERAL, COLOR_CUERPO_PRINCIPAL, COLOR_MENU_CURSOR_ENCIMA
-import util.util_ventana as util_ventana
-import util.util_imagenes as util_img
-from formularios.form_Iniciar_Secion import mostrar_ventana_inicio_sesion
+from formularios.form_reconocimiento import mostrar_ventana_reconocimiento
+from formularios.form_panel_datos import mostrar_panel_datos
 from formularios.form_salir import salir_aplicacion
-from formularios.form_crear_cuenta import abrir_ventana_crear_cuenta
-from formularios.form_tomar_datos import abrir_ventana_toma_de_datos 
 
-class FormularioMaestroDesign(tk.Tk):
-    
-    def configurar_boton_menu(self, button, text, icon, font, ancho, alto):
-        button.config(
-            text=f"{icon} {text}",
-            font=font,
-            bg=COLOR_MENU_LATERAL,
-            fg="white",
-            activebackground=COLOR_MENU_CURSOR_ENCIMA,
-            activeforeground="white",
-            width=ancho,
-            height=alto,
-            bd=0,
-            relief="flat",
-        )
-        button.pack(side=tk.TOP, fill="x", pady=5, padx=10)
-    
+# Definición de colores modernos
+COLOR_BARRA_SUPERIOR = "#1a1b26"    # Azul oscuro
+COLOR_MENU_LATERAL = "#2d4f7c"      # Azul medio
+COLOR_CUERPO_PRINCIPAL = "#f0f5ff"  # Azul claro
+COLOR_HOVER = "#1a365d"             # Azul oscuro para hover
+
+class FormularioMaestroDesign(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.logo = ImageTk.PhotoImage(Image.open("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Logo.png"))
+        
+        # Configurar tema
+        ctk.set_appearance_mode("system")
+        ctk.set_default_color_theme("blue")
+        
+        # Inicializar variables de instancia
+        self.logo = None
+        self.perfil = None
+        self.menu_lateral = None
+        self.cuerpo_principal = None
+        
+        try:
+            self.logo = ImageTk.PhotoImage(Image.open("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Logo.png"))
+        except Exception as e:
+            print(f"Error al cargar el logo: {e}")
+        
         self.config_window()
         self.paneles()
-        self.controles_barra_superior()        
+        self.controles_barra_superior()
         self.controles_menu_lateral()
-        self.cargar_pantalla_principal(self.cuerpo_principal) 
+        self.cargar_pantalla_principal()
 
     def config_window(self):
-        self.title('Eye System')
-        w, h = 1800, 900       
-        util_ventana.centrar_ventana(self, w, h)        
+        self.title('Eye System - Maestro')
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        self.geometry(f"{screen_width}x{screen_height-40}+0+0")
+        self.resizable(True, True)
 
-    def paneles(self):        
-        self.barra_superior = tk.Frame(self, bg=COLOR_BARRA_SUPERIOR, width=250)
-        self.barra_superior.pack(side=tk.TOP, fill='both')      
-
-        self.menu_lateral = tk.Frame(self, bg=COLOR_MENU_LATERAL, width=500)
-        self.menu_lateral.pack(side=tk.LEFT, fill='both') 
+    def paneles(self):
+        # Barra superior
+        self.barra_superior = ctk.CTkFrame(self, fg_color=COLOR_BARRA_SUPERIOR, height=60)
+        self.barra_superior.pack(side='top', fill='x')
         
-        self.cuerpo_principal = tk.Frame(self, bg=COLOR_CUERPO_PRINCIPAL, width=150)
-        self.cuerpo_principal.pack(side=tk.RIGHT, fill='both', expand=True)
+        # Contenedor principal
+        self.contenedor_principal = ctk.CTkFrame(self, fg_color="transparent")
+        self.contenedor_principal.pack(side='top', fill='both', expand=True)
+        
+        self.contenedor_principal.grid_columnconfigure(1, weight=1)
+        self.contenedor_principal.grid_rowconfigure(0, weight=1)
+        
+        # Menú lateral
+        self.menu_lateral = ctk.CTkFrame(self.contenedor_principal, fg_color=COLOR_MENU_LATERAL, width=250)
+        self.menu_lateral.grid(row=0, column=0, sticky="nsew")
+        self.menu_lateral.grid_propagate(False)
+        
+        # Cuerpo principal
+        self.cuerpo_principal = ctk.CTkFrame(self.contenedor_principal, fg_color=COLOR_CUERPO_PRINCIPAL)
+        self.cuerpo_principal.grid(row=0, column=1, sticky="nsew")
 
     def controles_barra_superior(self):
-        font_awesome = font.Font(family='FontAwesome', size=12)
-
-        self.labelTitulo = tk.Label(self.barra_superior, text="Eye System")
-        self.labelTitulo.config(fg="#fff", font=("Roboto", 15), bg=COLOR_BARRA_SUPERIOR, pady=10, width=16)
-        self.labelTitulo.pack(side=tk.LEFT)
-
-        self.buttonMenuLateral = tk.Button(self.barra_superior, text="\uf0c9", font=font_awesome,
-                                           command=self.toggle_panel, bd=0, bg=COLOR_BARRA_SUPERIOR, fg="white")
-        self.buttonMenuLateral.pack(side=tk.LEFT)
+        self.label_titulo = ctk.CTkLabel(
+            self.barra_superior,
+            text="Eye System - Maestro",
+            font=("Roboto", 20, "bold"),
+            text_color="white"
+        )
+        self.label_titulo.pack(side='left', padx=20)
+        
+        self.button_menu = ctk.CTkButton(
+            self.barra_superior,
+            text="≡",
+            width=40,
+            command=self.toggle_panel,
+            fg_color="transparent",
+            hover_color=COLOR_HOVER
+        )
+        self.button_menu.pack(side='left', padx=10)
 
     def controles_menu_lateral(self):
-        ancho_menu = 20
-        alto_menu = 2
-        font_awesome = font.Font(family='FontAwesome', size=15)
-        self.perfil = self.create_circular_image("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Perfil.png", (100, 100))
-        self.labelPerfil = tk.Label(self.menu_lateral, image=self.perfil, bg=COLOR_MENU_LATERAL)
-        self.labelPerfil.pack(side=tk.TOP, pady=10)
-        self.buttonIniciarSecion = tk.Button(self.menu_lateral, text="Iniciar Sesión", command=lambda: self.abrir_pantalla(mostrar_ventana_inicio_sesion))
-        self.buttonCrearCuenta = tk.Button(self.menu_lateral, text="Crear Cuenta", command=lambda: self.abrir_pantalla(abrir_ventana_crear_cuenta))
-        self.buttonTomarDatos = tk.Button(self.menu_lateral, text="Tomar Datos", command=lambda: self.abrir_pantalla(abrir_ventana_toma_de_datos))
-        self.buttonDashBoard = tk.Button(self.menu_lateral)
-        self.buttonSalir = tk.Button(self.menu_lateral, text="Salir", command=lambda: salir_aplicacion(self))
+        try:
+            perfil_img = Image.open("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Perfil.png")
+            perfil_img = perfil_img.resize((100, 100))
+            self.perfil = ImageTk.PhotoImage(self.create_circular_image(perfil_img))
+            
+            label_perfil = ctk.CTkLabel(self.menu_lateral, image=self.perfil, text="")
+            label_perfil.pack(pady=20)
+        except Exception as e:
+            print(f"Error al cargar la imagen de perfil: {e}")
 
-        buttons_info = [
-            ("Iniciar Sesión", "\uf109", self.buttonIniciarSecion),
-            ("Crear Cuenta", "\uf007", self.buttonCrearCuenta),
-            ("Tomar Datos", "\uf03e", self.buttonTomarDatos),
-            ("Panel De Datos", "\uf129", self.buttonDashBoard),
-            ("Salir", "\uf013", self.buttonSalir),
+        botones_info = [
+            ("Reconocimiento", lambda: self.abrir_pantalla(mostrar_ventana_reconocimiento)),
+            ("Panel De Datos", lambda: self.abrir_pantalla(mostrar_panel_datos)),
+            ("Salir", lambda: salir_aplicacion(self))
         ]
 
-        for text, icon, button in buttons_info:
-            self.configurar_boton_menu(button, text, icon, font_awesome, ancho_menu, alto_menu)                    
-    
-    def abrir_pantalla(self, funcion_pantalla):
-        # Limpiar el frame principal antes de abrir la nueva pantalla
-        for widget in self.cuerpo_principal.winfo_children():
-            widget.destroy()
-
-        self.toggle_panel(False)  # Ocultar el menú lateral al abrir una pantalla
-        funcion_pantalla(self.cuerpo_principal, self.cargar_pantalla_principal)
+        for texto, comando in botones_info:
+            btn = ctk.CTkButton(
+                self.menu_lateral,
+                text=texto,
+                command=comando,
+                width=200,
+                height=40,
+                corner_radius=10,
+                fg_color="transparent",
+                hover_color=COLOR_HOVER,
+                border_width=2,
+                border_color="white"
+            )
+            btn.pack(pady=10, padx=20)
 
     def cargar_pantalla_principal(self, frame_principal=None):
-        self.toggle_panel(True)  # Mostrar el menú lateral al regresar a la pantalla principal
+        self.toggle_panel(True)
         if frame_principal is None:
             frame_principal = self.cuerpo_principal
             
         for widget in frame_principal.winfo_children():
             widget.destroy()
-        label_logo = tk.Label(frame_principal, image=self.logo, bg=COLOR_CUERPO_PRINCIPAL)
-        label_logo.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        frame_width = frame_principal.winfo_width()
+        frame_height = frame_principal.winfo_height()
+        
+        if frame_width <= 1 or frame_height <= 1:
+            frame_width = 800
+            frame_height = 600
+        
+        try:
+            original_image = Image.open("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Logo.png")
+            aspect_ratio = original_image.width / original_image.height
+            
+            if frame_width / frame_height > aspect_ratio:
+                new_height = frame_height
+                new_width = int(frame_height * aspect_ratio)
+            else:
+                new_width = frame_width
+                new_height = int(frame_width / aspect_ratio)
+            
+            resized_image = original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            self.logo = ImageTk.PhotoImage(resized_image)
+            
+            label_logo = ctk.CTkLabel(frame_principal, image=self.logo, text="")
+            label_logo.place(relx=0.5, rely=0.5, anchor='center')
+            
+            frame_principal.bind('<Configure>', lambda e: self.actualizar_imagen(e, label_logo))
+        except Exception as e:
+            print(f"Error al cargar o redimensionar el logo: {e}")
+
+    def actualizar_imagen(self, event, label_logo):
+        try:
+            frame_width = event.width
+            frame_height = event.height
+            
+            original_image = Image.open("D:/USUARIO/Music/Eye_System/Interfaz_Eye_System/imagenes/Logo.png")
+            aspect_ratio = original_image.width / original_image.height
+            
+            if frame_width / frame_height > aspect_ratio:
+                new_height = frame_height
+                new_width = int(frame_height * aspect_ratio)
+            else:
+                new_width = frame_width
+                new_height = int(frame_width / aspect_ratio)
+            
+            resized_image = original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            self.logo = ImageTk.PhotoImage(resized_image)
+            
+            label_logo.configure(image=self.logo)
+        except Exception as e:
+            print(f"Error al actualizar la imagen: {e}")
 
     def toggle_panel(self, mostrar=None):
+        if not hasattr(self, 'menu_lateral') or self.menu_lateral is None:
+            return
+            
         if mostrar is None:
             mostrar = not self.menu_lateral.winfo_ismapped()
+        
         if mostrar:
-            self.menu_lateral.pack(side=tk.LEFT, fill='y')
+            self.menu_lateral.grid(row=0, column=0, sticky="nsew")
         else:
-            self.menu_lateral.pack_forget()
+            self.menu_lateral.grid_remove()
 
-    def create_circular_image(self, image_path, size):
-        img = Image.open(image_path).resize(size, PilImage.Resampling.LANCZOS)
-        mask = Image.new("L", size, 0)
+    def create_circular_image(self, image):
+        mask = Image.new("L", image.size, 0)
         draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, size[0], size[1]), fill=255)
-        img = img.convert("RGBA")
-        img.putalpha(mask)
+        draw.ellipse((0, 0, image.size[0], image.size[1]), fill=255)
+        
+        output = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        output.paste(image, (0, 0))
+        output.putalpha(mask)
+        
+        return output
 
-        return ImageTk.PhotoImage(img)
+    def abrir_pantalla(self, funcion_pantalla):
+        try:
+            for widget in self.cuerpo_principal.winfo_children():
+                widget.destroy()
+            
+            self.toggle_panel(False)
+            funcion_pantalla(self.cuerpo_principal, self.cargar_pantalla_principal)
+        except Exception as e:
+            print(f"Error al abrir la pantalla: {e}")
 
 if __name__ == "__main__":
     app = FormularioMaestroDesign()
